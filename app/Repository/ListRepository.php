@@ -28,7 +28,7 @@ class ListRepository implements ListRepositoryInterface
         $now   = Carbon::now();
         $year = $now->year;
         $date = Carbon::parse($year.$payload['text']);
-        $shifts  = Work::where('date', $date)->get();
+        $shifts  = Work::getListByDate($date);
         $response = [];
 
         //コマンド入力日の月と年と合致する
@@ -57,7 +57,7 @@ class ListRepository implements ListRepositoryInterface
         $nowM  = $now->month;
 
         //該当するユーザのシフト情報の全て取得
-        $worksM = Work::where('user_id', $payload['user_id'])->get();
+        $worksM = Work::getListByUser($payload['user_id']);
         $response = [];
 
         //コマンド入力日の月と年と合致する
