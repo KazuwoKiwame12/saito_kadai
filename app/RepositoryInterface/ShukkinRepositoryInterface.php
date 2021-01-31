@@ -1,7 +1,6 @@
 <?php
 
-
-namespace App\Repository;
+namespace App\RepositoryInterface;
 
 interface ShukkinRepositoryInterface
 {

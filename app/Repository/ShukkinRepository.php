@@ -2,9 +2,9 @@
 
 
 namespace App\Repository;
-use App\Repository\ShukkinRepositoryInterface;
-use App\SlackUser;
-use App\Work;
+use App\RepositoryInterface\ShukkinRepositoryInterface;
+use App\Model\SlackUser;
+use App\Model\Work;
 use Carbon\Carbon;
 use Exception;
 

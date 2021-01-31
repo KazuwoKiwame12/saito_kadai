@@ -4,7 +4,7 @@
 namespace App\Providers;
 
 use App\Repository\ShukkinRepository;
-use App\Repository\ShukkinRepositoryInterface;
+use App\RepositoryInterface\ShukkinRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class ShukkinServiceProvider extends  ServiceProvider

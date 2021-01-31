@@ -4,7 +4,8 @@
 namespace App\Repository;
 
 
-use App\SlackUser;
+use App\Model\SlackUser;
+use App\RepositoryInterface\UpdateWorkerRepositoryInterface;
 use Exception;
 
 class UpdateWorkerRepository implements UpdateWorkerRepositoryInterface

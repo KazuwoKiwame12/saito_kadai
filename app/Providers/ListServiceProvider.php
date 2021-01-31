@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Repository\ListRepository;
-use App\Repository\ListRepositoryInterface;
+use App\RepositoryInterface\ListRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class ListServiceProvider extends ServiceProvider
