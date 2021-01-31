@@ -4,7 +4,7 @@
 namespace App\Repository;
 
 
-use App\SlackUser;
+use App\Model\SlackUser;
 use Illuminate\Support\Arr;
 
 class UserRepository

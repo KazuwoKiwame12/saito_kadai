@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Repository\UpdateWorkerRepository;
-use App\Repository\UpdateWorkerRepositoryInterface;
+use App\RepositoryInterface\UpdateWorkerRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class UpdateWorkerServiceProvider extends ServiceProvider

@@ -3,7 +3,7 @@
 
 namespace App\Repository;
 
-use App\SlackTeam;
+use App\Model\SlackTeam;
 
 class TeamRepository
 {
