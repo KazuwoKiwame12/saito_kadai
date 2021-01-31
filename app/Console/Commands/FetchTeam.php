@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Model\SlackTeam;
 use App\Repository\TeamRepository;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
@@ -50,8 +51,7 @@ class FetchTeam extends Command
             $id      = $team['id'];
             $name    = $team['name'];
             //DBに内容保存
-            $repo    = new TeamRepository();
-            $repo->saveInfo($id, $name);
+            (new SlackTeam())->update($id, $name);
         }
     }
 }

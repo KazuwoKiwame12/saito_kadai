@@ -127,7 +127,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     public function canWork($work, $user_id, $shiftTime, $date, $submitWeek) {
         $result = 3;
 
-        $workListM  = $work->whereMonth('date', $date->month)->where('user_id', $user_id)->get();//１か月のシフトデータ
+        $workListM = $work->getListByUserAndMonth($date->month, $user_id);//１か月のシフトデータ
 
         $weekLimitTime = 8*60;
         $monthLimitTime= 8*60*5;
@@ -176,7 +176,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     public function canUpdate($work, $user_id, $shiftTime,  $date, $submitWeek) {
         $result = 3;
 
-        $workListM  = $work->whereMonth('date', $date->month)->where('user_id', $user_id)->get();//１か月のシフトデータ
+        $workListM = $work->getListByUserAndMonth($date->month, $user_id);//１か月のシフトデータ
 
         $weekLimitTime = 8*60;
         $monthLimitTime= 8*60*5;
@@ -245,7 +245,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             $work->save();
         }
 
-        $workListM  = $work->whereMonth('date', $date->month)->where('user_id', $user_id)->get();//１か月のシフト
+        $workListM = $work->getListByUserAndMonth($date->month, $user_id);//１か月のシフトデータ
 
         $weekLimitTime = 8*60;
         $monthLimitTime= 8*60*5;
@@ -297,7 +297,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             $work->save();
         }
 
-        $workListM  = $work->whereMonth('date', $date->month)->where('user_id', $user_id)->get(); //１か月のシフト
+        $workListM = $work->getListByUserAndMonth($date->month, $user_id);//１か月のシフトデータ
 
         $weekTime = array(0, 0, 0, 0, 0);//各週の勤務時間
 

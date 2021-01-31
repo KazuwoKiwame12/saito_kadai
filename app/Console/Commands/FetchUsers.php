@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Repository\UserRepository;
+use App\Model\SlackUser;
 use Illuminate\Console\Command;
 use \GuzzleHttp\Client;
 
@@ -46,8 +46,7 @@ class FetchUsers extends Command
         $responseBody = json_decode($response->getBody()->getContents(), true);
 
         //DBに保存
-        $repo = new UserRepository();
-        $repo->saveInfo($responseBody['members']);
+        (new SlackUser())->updateAllUsersInfos($responseBody['members']);
 
     }
 }
