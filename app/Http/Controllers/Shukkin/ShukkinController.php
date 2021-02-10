@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Shukkin;
 
 use App\Http\Controllers\Controller;
 use App\Repository\ShukkinRepositoryInterface;
+use App\Services\MessageService;
 use Illuminate\Http\Request;
 use App\Services\SlackService;
 
@@ -20,32 +21,7 @@ class ShukkinController extends Controller
      public function handle(Request $request) {
         $payload = $request->all();
         $response = $this->response->workMessage($payload);
-
-        if($response['status'] == -1) {
-            $message = '正しい入力値ではありません！'."\n".'以下のように入力してください！！！'."\n".'ex)/shukkin 0101 13:00 19:00';
-        }
-        else if($response['status'] == 0) {
-            $message = '過去に登録はできません！';
-        }
-        else if($response['status'] == 1) {
-            $message = '人数が５人に達しています！'."\n".'シフト登録できません！代表に連絡してください';
-        }
-        else if($response['status'] == 2) {
-            $message = '申し込まれた時間では働けません!!'."\n".
-                $response['submitMonth'].'月の'.$response['submitWeek'].'週目の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
-                $response['submitMonth'].'月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
-        }
-        else if($response['status'] == 3) {
-            $message = $response['submitMonth'].'月の'.$response['submitWeek'].'週目の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
-                $response['submitMonth'].'月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
-        }
-        else if($response['status'] == 4) {
-            $message = '1日に働ける時間は7時間です！';
-        }
-        else if($response['status'] == 5) {
-            $message = $response['submitMonth'].'月の勤務時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分になっています。';
-        }
-
+        $message = $response['option'] ? MessageService::getForShukkin($response['keyword'], $response['option']) :  MessageService::getForList($response['keyword']);
         $this->notification->send($message);
      }
 }

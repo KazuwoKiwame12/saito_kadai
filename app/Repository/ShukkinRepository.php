@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\RepositoryInterface\ShukkinRepositoryInterface;
 use App\Model\SlackUser;
 use App\Model\Work;
+use App\Services\ConstService;
 use Carbon\Carbon;
 use Exception;
 
@@ -27,11 +28,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             $submitWeek = $start_time->weekNumberInMonth-1;
             $user_id = $payload['user_id'];
         } catch(Exception $e) {
-            $response = [
-                'status'   => -1,
-            ];
-
-            return $response;
+            return ['keyword' => ConstService::NOT_CORRECT_INPUT, 'option' => null];
         }
 
 
@@ -40,24 +37,20 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         /*過去に登録しているかどうか*/
         $response=$this->checkTime($date, $now);
         if($response['status']== 0) {
-            return $response;
+            return ['keyword' => ConstService::CANNOT_REGISTER_FOR_PAST, 'option' => null];
         }
 
         /*人数の確認*/
         $response=$this->checkNum($work, $date);
         if($response['status']== 1) {
-            return $response;
+            return ['keyword' => ConstService::CANNOT_REGISTER_FOR_NUMBER, 'option' => null];
         }
 
         /*一日働ける時間の確認*/
         /*７時間までを前提にしている*/
         $shiftTime = $end_time->diffInMinutes($start_time);
         if($shiftTime > 7*60) {
-            $response = [
-                'status'   => 4,
-            ];
-
-            return $response;
+            return ['keyword' => ConstService::CANNOT_REGISTER_FOR_WORKLIMIT_IN_DAY, 'option' => null];
         }
 
         /*シフトの登録に関して*/
@@ -68,12 +61,12 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             /*働けるかの確認*/
             if(!$checker->exists()) {
                 $response = $this->canWork($work, $user_id, $shiftTime, $date, $submitWeek);
-                if ($response['status'] == 2) {
+                if ($response['status'] == ConstService::CANNOT_REGISTER_FOR_WORKLIMI) {
                     return $response;
                 }
             }else {
                 $response = $this->canUpdate($work, $user_id, $shiftTime, $date, $submitWeek);
-                if ($response['status'] == 2) {
+                if ($response['status'] == ConstService::CANNOT_REGISTER_FOR_WORKLIMI) {
                     return $response;
                 }
             }
@@ -90,16 +83,11 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     }
 
 
-
-
-    /***********************************************************************/
-    /***************日付け確認,人数確認、時間制限確認、シフト登録*****************/
-
     /*申請された日が過去ではないか*/
     public function checkTime($date, $now) {
-        $result = 3;
+        $result = ConstService::REGISTER_BY_EMPLOYEE;
         if($date <= $now) {
-            $result = 0;
+            $result = ConstService::CANNNOT_REGISTER_FOR_PAST;
         }
 
         $response = [
@@ -110,11 +98,11 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
     /*人数が５人以上ではないかどうか*/
     public function checkNum($work, $date) {
-        $result = 3;
+        $result = ConstService::REGISTER_BY_EMPLOYEE;
         $workerNum = $work->where('date', $date)->count();
 
         if($workerNum >=5) {
-            $result = 1;
+            $result = ConstService::CANNOT_REGISTER_FOR_NUMBER;
         }
 
         $response = [
@@ -125,7 +113,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
     /*申請された時間で働けるかどうか*/
     public function canWork($work, $user_id, $shiftTime, $date, $submitWeek) {
-        $result = 3;
+        $result = ConstService::REGISTER_BY_EMPLOYEE;
 
         $workListM = $work->getListByUserAndMonth($date->month, $user_id);//１か月のシフトデータ
 
@@ -143,11 +131,11 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         /*シフト提出週の確認*/
         if($weekTime[$submitWeek]+$shiftTime > $weekLimitTime) {//8時間
-            $result = 2;
+            $result = ConstService::CANNOT_REGISTER_FOR_WORKLIMI;
         }
         /*今月の確認*/
         if(array_sum($weekTime)+$shiftTime > $monthLimitTime) {
-            $result = 2;
+            $result = ConstService::CANNOT_REGISTER_FOR_WORKLIMI;
         }
 
         $weekTimeN = $weekTime[$submitWeek];
@@ -161,20 +149,22 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $monthMin  = $monthLeftTime % 60;
 
         $response = [
-            'submitWeek'  => $submitWeek,
-            'submitMonth' => $date->month,
-            'weekHour'    => $weekHour,
-            'weekMin'     => $weekMin,
-            'monthHour'   => $monthHour,
-            'monthMin'    => $monthMin,
-            'status'      =>  $result,
+            'option' => [
+                'submitWeek'  => $submitWeek,
+                'submitMonth' => $date->month,
+                'weekHour'    => $weekHour,
+                'weekMin'     => $weekMin,
+                'monthHour'   => $monthHour,
+                'monthMin'    => $monthMin,
+            ],
+            'status' =>  $result,
         ];
         return $response;
     }
 
     /*申請された時間で働けるかどうか(重複している場合)*/
     public function canUpdate($work, $user_id, $shiftTime,  $date, $submitWeek) {
-        $result = 3;
+        $result = ConstService::REGISTER_BY_EMPLOYEE;
 
         $workListM = $work->getListByUserAndMonth($date->month, $user_id);//１か月のシフトデータ
 
@@ -202,11 +192,11 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         /*シフト提出週の確認*/
         if($weekTime[$submitWeek] > $weekLimitTime) {
             $weekTime[$submitWeek] -= $subTime;
-            $result = 2;
+            $result = ConstService::CANNOT_REGISTER_FOR_WORKLIMI;
         }
         /*今月の確認*/
         if(array_sum($weekTime) > $monthLimitTime) {
-            $result = 2;
+            $result = ConstService::CANNOT_REGISTER_FOR_WORKLIMI;
         }
 
         $weekTimeN = $weekTime[$submitWeek];
@@ -220,13 +210,15 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $monthMin  = $monthLeftTime % 60;
 
         $response = [
-            'submitWeek'  => $submitWeek,
-            'submitMonth' => $date->month,
-            'weekHour'    => $weekHour,
-            'weekMin'     => $weekMin,
-            'monthHour'   => $monthHour,
-            'monthMin'    => $monthMin,
-            'status'      =>  $result,
+            'option' => [
+                'submitWeek'  => $submitWeek,
+                'submitMonth' => $date->month,
+                'weekHour'    => $weekHour,
+                'weekMin'     => $weekMin,
+                'monthHour'   => $monthHour,
+                'monthMin'    => $monthMin,
+            ],
+            'status' =>  $result,
         ];
         return $response;
     }
@@ -270,13 +262,15 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $monthMin  = $monthLeftTime % 60;
 
         $response = [
-            'submitWeek'  => $submitWeek,
-            'submitMonth' => $date->month,
-            'weekHour'    => $weekHour,
-            'weekMin'     => $weekMin,
-            'monthHour'   => $monthHour,
-            'monthMin'    => $monthMin,
-            'status'      => 3,
+            'option' => [
+                'submitWeek'  => $submitWeek,
+                'submitMonth' => $date->month,
+                'weekHour'    => $weekHour,
+                'weekMin'     => $weekMin,
+                'monthHour'   => $monthHour,
+                'monthMin'    => $monthMin,
+            ],
+            'status' =>  ConstService::REGISTER_BY_EMPLOYEE,
         ];
 
         return $response;
@@ -315,10 +309,12 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $monthMin  = $monthTime % 60;
 
         $response = [
-            'submitMonth' => $date->month,
-            'monthHour' => $monthHour,
-            'monthMin'  => $monthMin,
-            'status'   => 5,
+            'option' => [
+                'submitMonth' => $date->month,
+                'monthHour'   => $monthHour,
+                'monthMin'    => $monthMin,
+            ],
+            'status' =>  ConstService::REGISTER_BY_EXPERT_EMPLOYEE,
         ];
 
         return $response;
