@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Shukkin;
 
 use App\Http\Controllers\Controller;
 use App\Repository\UpdateWorkerRepositoryInterface;
+use App\Services\MessageService;
 use App\Services\SlackService;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,8 @@ class UpdateWorkerController extends Controller
 
     public function handle(Request $request) {
         $payload = $request->all();
-        $message = $this->response->update($payload);
+        $response = $this->response->update($payload);
+        $message = $response['option'] ? MessageService::getForUpdate($response['keyword'], $response['option']) :  MessageService::getForList($response['keyword']);
         $this->notification->send($message);
     }
 }

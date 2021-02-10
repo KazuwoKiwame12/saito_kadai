@@ -6,22 +6,26 @@ namespace App\Repository;
 
 use App\Model\SlackUser;
 use App\RepositoryInterface\UpdateWorkerRepositoryInterface;
+use App\Services\ConstService;
+use App\Services\MessageService;
 use Exception;
 
 class UpdateWorkerRepository implements UpdateWorkerRepositoryInterface
 {
-    public function update($payload)
+    /**
+     * @param $payload
+     * @return array
+     */
+    public function update($payload): array
     {
         $owner = SlackUser::where('slack_id', $payload['user_id'])->first()->is_owner;
-        if(!$owner) return 'このコマンドは管理者のみしか使えません!';
-
+        if(!$owner) return [ 'keyword' => ConstService::ONLY_FOR_ADMINISTRATOR, 'option' => null];
 
         $user = SlackUser::where('name', $payload['text'])->first();
-        if(!($user instanceof SlackUser)) return 'そのような人物は存在しません!';
-
+        if(!($user instanceof SlackUser)) return [ 'keyword' => ConstService::NOT_EXIST_PERSON, 'option' => null];
 
         $user->mode = '熟練者';
         $user->save();
-        return $payload['text'].'のシフト時間制限がなくなりました';
+        return [ 'keyword' => ConstService::UPDATE_EMPLOYEE, 'option' => ['name' => $payload['text']]];
     }
 }

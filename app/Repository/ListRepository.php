@@ -6,12 +6,18 @@ namespace App\Repository;
 
 use App\Model\SlackUser;
 use App\Model\Work;
+use App\Services\ConstService;
+use App\Services\MessageService;
 use Carbon\Carbon;
 use App\RepositoryInterface\ListRepositoryInterface;
 
 class ListRepository implements ListRepositoryInterface
 {
-    public function workList($payload)
+    /**
+     * @param $payload
+     * @return array
+     */
+    public function workList($payload): array
     {
         $owner = SlackUser::where('slack_id', $payload['user_id'])->first();
         //listコマンドを出したのが管理者かどうかの確認
@@ -21,18 +27,16 @@ class ListRepository implements ListRepositoryInterface
         return $response;
     }
 
-
-    ///////////////////////////////////////////////
-    ///////////管理者用、バイト用のデータ取得//////////
-    public function allList($payload) {
+    // 管理者が取得する従業員のシフトデータ
+    public function allList($payload): array {
         $now   = Carbon::now();
         $year = $now->year;
         $date = Carbon::parse($year.$payload['text']);
         $shifts  = Work::getListByDate($date);
         $response = [];
 
-        //コマンド入力日の月と年と合致する
-        //全ユーザのデータの取得
+        // コマンド入力日の月と年と合致する
+        // 全ユーザのデータの取得
         foreach($shifts as $shift) {
             $name = SlackUser::where('slack_id', $shift->user_id)->first()->name;
             $parseStart = new Carbon($shift->start_time);
@@ -42,16 +46,16 @@ class ListRepository implements ListRepositoryInterface
             $response[] = [
               'name'     =>$name,
               'start'    =>$parseStart->toTimeString(),
-              'end'      =>$parseEnd->toTimeString(),
-              'is_owner' =>true
+              'end'      =>$parseEnd->toTimeString()
             ];
         }
 
-        return $response;
+        return ['keyword' => ConstService::SHIFTS_FOR_ADMINISTRATOR, 'option' => $response];
     }
 
-    public function myList($payload) {
-        //コマンド入力日の月と年
+    // 自分のシフトデータ取得
+    public function myList($payload): array {
+        // コマンド入力日の月と年
         $now   = Carbon::now();
         $nowY = $now->year;
         $nowM  = $now->month;
@@ -74,12 +78,11 @@ class ListRepository implements ListRepositoryInterface
                 $response[] = [
                     'date'  => $parseDate->format('Y年m月d日'),
                     'start' => $parseStart->toTimeString(),
-                    'end'   => $parseEnd->toTimeString(),
-                    'is_owner' =>false
+                    'end'   => $parseEnd->toTimeString()
                 ];
             }
         }
 
-        return $response;
+        return ['keyword' => ConstService::SHIFTS_FOR_EMPLOYEE, 'option' => $response];
     }
 }
